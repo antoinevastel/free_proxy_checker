@@ -1,4 +1,4 @@
-# free_proxy_checker
+# free-proxy_checker
 NodeJS library **WITHOUT** any external dependencies to check if free HTTP/SOCKS4/SOCKS5 proxies are working/up.
 
 **Warning:** The goal of this library is not to collect free proxies.
@@ -21,6 +21,10 @@ We do that to ignore proxies that are up but that ignore/block our request.
 To test SOCKS proxies, we establish create a TCP socket using `net.Socket` and try to establish a connection with the proxy.
 If the connection is successful (no error and no timeout), we consider the proxy is UP.
 
+## Library installation
+```
+npm install free-proxy-checker
+```
 
 ## Library usage
 
@@ -50,3 +54,10 @@ const {HttpProxy, SocksProxy, ProxyChecker} = require('free-proxy-checker');
     console.log(proxiesUp);
 })();
 ```
+
+## Remarks
+
+For the moment the library is really basic, it only checks if a proxy is UP/DOWN.
+It doesn't store any data about latency.
+Feel free to open an issue if you have a feature request. 
+I may add it to the library if I feel like it's relevant.

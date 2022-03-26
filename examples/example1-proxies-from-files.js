@@ -23,9 +23,9 @@ function readProxyFile(filePath, proxyProtocol) {
     const timeout = 7500;
     const concurrency = 30;
 
-    const proxies = readProxyFile(path.dirname(__filename) + '/data/http_proxies.txt', 'http').slice(0, 185);
-    proxies.push(...readProxyFile(path.dirname(__filename) + '/data/socks4_proxies.txt', 'socks4').slice(0, 50));
-    proxies.push(...readProxyFile(path.dirname(__filename) + '/data/socks5_proxies.txt', 'socks5').slice(0, 150));
+    const proxies = readProxyFile(path.dirname(__filename) + '/data/http_proxies.txt', 'http');
+    proxies.push(...readProxyFile(path.dirname(__filename) + '/data/socks4_proxies.txt', 'socks4'));
+    proxies.push(...readProxyFile(path.dirname(__filename) + '/data/socks5_proxies.txt', 'socks5'));
 
     const proxyChecker = new ProxyChecker(proxies, {
         concurrency: concurrency,
