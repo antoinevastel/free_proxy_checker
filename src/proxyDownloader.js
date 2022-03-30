@@ -123,8 +123,10 @@ class FoxtoolsDownloader extends ProxyDownloader {
                         .filter(Boolean)
                         .filter(row => row.indexOf(' ') === -1)
                         .forEach(row => {
-                            const [host, port] = row.replace(/\r/g, '').split(':');
-                            proxies.push(new HttpProxy(host, port));
+                            try {
+                                const [host, port] = row.replace(/\r/g, '').split(':');
+                                proxies.push(new HttpProxy(host, port));
+                            } catch(_) {}   
                         })
                 }
                 pageIndex++;
@@ -179,15 +181,74 @@ class FreeProxyListDownloader extends ProxyDownloader {
     }
 }
 
-async function downloadAllProxies () {
+class MyProxyDownloader extends ProxyDownloader {
+    constructor() {
+        super();
+        this.name = 'My proxy';
+    }
+
+    async download() {
+        const urls = [
+            'https://www.my-proxy.com/free-proxy-list.html',
+            'https://www.my-proxy.com/free-proxy-list-2.html',
+            'https://www.my-proxy.com/free-proxy-list-3.html',
+            'https://www.my-proxy.com/free-proxy-list-4.html',
+            'https://www.my-proxy.com/free-proxy-list-5.html',
+            'https://www.my-proxy.com/free-proxy-list-6.html',
+            'https://www.my-proxy.com/free-proxy-list-7.html',
+            'https://www.my-proxy.com/free-proxy-list-8.html',
+            'https://www.my-proxy.com/free-proxy-list-9.html',
+            'https://www.my-proxy.com/free-proxy-list-10.html',
+            'https://www.my-proxy.com/free-elite-proxy.html',
+            'https://www.my-proxy.com/free-anonymous-proxy.html',
+            'https://www.my-proxy.com/free-socks-4-proxy.html',
+            'https://www.my-proxy.com/free-socks-5-proxy.html',
+        ];
+
+        let proxies = [];
+        for (let url of urls) {
+            try {
+                const proxyPageContent = await this._getURL(url);
+                const indexStartProxiesDiv = proxyPageContent.indexOf('<div class="list"');
+                const indexEndProxiesDiv = indexStartProxiesDiv + proxyPageContent.slice(indexStartProxiesDiv, proxyPageContent.length).indexOf('</div>');
+                proxyPageContent.slice(indexStartProxiesDiv, indexEndProxiesDiv).replace('<div class="list">', '').replace("<div class='to-lock'>", '')
+                    .split('<br>')
+                    .filter(Boolean)
+                    .forEach((row) => {
+                        try {
+                            const rowSplit = row.split(':');
+                            const host = rowSplit[0]
+                            const port = rowSplit[1].split('#')[0];
+    
+                            if (url.indexOf('sock') > -1) {
+                                proxies.push(new SocksProxy(host, port));
+                            } else {
+                                proxies.push(new HttpProxy(host, port));
+                            }
+                        } catch (_) {
+                            console.log(`(${this.name}) Tried to create a proxy from invalid data`)
+                        }
+                    })
+            } catch (_) {
+                console.log(`An error occured while downloading proxies from ${this.name}`);
+            }
+        }
+
+        return proxies;
+    }
+}
+
+async function downloadAllProxies() {
     const proxyScrapeDownloader = new ProxyScrapeDownloader();
     const foxtoolsDownloader = new FoxtoolsDownloader();
     const freeProxyListDownloader = new FreeProxyListDownloader();
+    const myProxyDownloader = new MyProxyDownloader();
 
     const proxyPromises = await Promise.allSettled([
         proxyScrapeDownloader.download(),
         foxtoolsDownloader.download(),
         freeProxyListDownloader.download(),
+        myProxyDownloader.download()
     ]);
 
     const proxies = new Set();
@@ -200,4 +261,5 @@ async function downloadAllProxies () {
 module.exports.ProxyScrapeDownloader = ProxyScrapeDownloader;
 module.exports.FoxtoolsDownloader = FoxtoolsDownloader;
 module.exports.FreeProxyListDownloader = FreeProxyListDownloader;
+module.exports.MyProxyDownloader = MyProxyDownloader;
 module.exports.downloadAllProxies = downloadAllProxies;

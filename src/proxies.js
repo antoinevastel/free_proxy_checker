@@ -8,13 +8,22 @@ const net = require('net');
  */
 class Proxy {
     constructor(host, port) {
-        this.host = host;
-        this.port = port;
-        this.isUp = null;
+        if (this._isValidHost(host)) {
+            this.host = host;
+            this.port = port;
+            this.isUp = null;
+        } else {
+            throw new Error('Host provided is not a valid IP address');
+        }
+        
 
         if (this.constructor === Proxy) {
             throw new Error("Abstract classes can't be instantiated.");
         }
+    }
+
+    _isValidHost(ipAddress) {
+        return net.isIP(ipAddress);
     }
 
     async _testConnection(timeout) {
