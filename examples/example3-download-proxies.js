@@ -1,6 +1,6 @@
 const path = require('path');
 
-const {ProxyChecker, ProxyScrapeDownloader, FoxtoolsDownloader, FreeProxyListDownloader, downloadAllProxies} = require(path.dirname(__filename) + '/..' + '/src/index.js');
+const {ProxyChecker, ProxyScrapeDownloader, FoxtoolsDownloader, FreeProxyListDownloader, MyProxyDownloader, downloadAllProxies} = require(path.dirname(__filename) + '/..' + '/src/index.js');
 
 (async () => {
     // You can download proxies from a particular proxy provider, e.g. proxyscrape, foxtools or freeproxylist
@@ -15,6 +15,10 @@ const {ProxyChecker, ProxyScrapeDownloader, FoxtoolsDownloader, FreeProxyListDow
     const freeProxyListDownloader = new FreeProxyListDownloader();
     const freeProxyListProxies = await freeProxyListDownloader.download();
     console.log(freeProxyListProxies);
+
+    const myProxyDownloader = new MyProxyDownloader();
+    const myProxyListProxies = await myProxyDownloader.download();
+    console.log(myProxyListProxies);
 
     // You can also download all proxies from all proxy providers at once
     const allProxies = await downloadAllProxies();

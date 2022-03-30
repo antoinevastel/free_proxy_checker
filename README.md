@@ -32,7 +32,7 @@ You can find examples in the `/examples` directory.
 const {ProxyChecker, ProxyScrapeDownloader, FoxtoolsDownloader, FreeProxyListDownloader, downloadAllProxies} = require('free-proxy-checker');
 
 (async () => {
-    // We can download proxies from a particular proxy provider, e.g. proxyscrape, foxtools or freeproxylist
+    // We can download proxies from a particular proxy provider, e.g. proxyscrape, foxtools, freeproxylist and my proxy
     const proxyScrapeDownloader = new ProxyScrapeDownloader();
     const proxyScrapeProxies = await proxyScrapeDownloader.download();
 
