@@ -30,6 +30,10 @@ class Proxy {
         throw new Error("Method '_testConnection()' must be implemented.");
     }
 
+    toString() {
+        return `${this.host}:${this.port}-${this.constructor.name}`;
+    }
+
 }
 
 class HttpProxy extends Proxy {
