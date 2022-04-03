@@ -1,5 +1,6 @@
 const https = require('https');
 const http = require('http');
+const net = require('net');
 const { HttpProxy, SocksProxy } = require('./proxies.js');
 
 /**
@@ -79,22 +80,24 @@ class ProxyScrapeDownloader extends ProxyDownloader {
                 .filter(Boolean)
                 .forEach(row => {
                     const [host, port] = row.replace(/\r/g, '').split(':');
-                    proxies.push(new HttpProxy(host, port));
+                    if (net.isIP(host)) {
+                        proxies.push(new HttpProxy(host, port));
+                    }
                 })
 
             socks4ProxiesContent.concat(socks5ProxiesContent).split('\n')
                 .filter(Boolean)
                 .forEach(row => {
                     const [host, port] = row.replace(/\r/g, '').split(':');
-                    proxies.push(new SocksProxy(host, port));
+                    if (net.isIP(host)) {
+                        proxies.push(new SocksProxy(host, port));
+                    }
                 })
         } catch (_) {
             console.log(`An error occured while downloading proxies from ${this.name}`);
         } finally {
             return proxies;
         }
-
-        return proxies;
     }
 }
 
@@ -126,7 +129,7 @@ class FoxtoolsDownloader extends ProxyDownloader {
                             try {
                                 const [host, port] = row.replace(/\r/g, '').split(':');
                                 proxies.push(new HttpProxy(host, port));
-                            } catch(_) {}   
+                            } catch (_) { }
                         })
                 }
                 pageIndex++;
@@ -169,8 +172,9 @@ class FreeProxyListDownloader extends ProxyDownloader {
                         const rowSplit = row.split('<td>');
                         const host = rowSplit[1].replace('</td>', '');
                         const port = rowSplit[2].replace('</td>', '');
-
-                        proxies.push(new HttpProxy(host, port));
+                        if (net.isIP(host)) {
+                            proxies.push(new HttpProxy(host, port));
+                        }
                     })
             } catch (_) {
                 console.log(`An error occured while downloading proxies from ${this.name}`);
@@ -215,18 +219,15 @@ class MyProxyDownloader extends ProxyDownloader {
                     .split('<br>')
                     .filter(Boolean)
                     .forEach((row) => {
-                        try {
-                            const rowSplit = row.split(':');
-                            const host = rowSplit[0]
-                            const port = rowSplit[1].split('#')[0];
-    
+                        const rowSplit = row.split(':');
+                        const host = rowSplit[0]
+                        const port = rowSplit[1].split('#')[0];
+                        if (net.isIP(host)) {
                             if (url.indexOf('sock') > -1) {
                                 proxies.push(new SocksProxy(host, port));
                             } else {
                                 proxies.push(new HttpProxy(host, port));
                             }
-                        } catch (_) {
-                            console.log(`(${this.name}) Tried to create a proxy from invalid data`)
                         }
                     })
             } catch (_) {
@@ -238,28 +239,102 @@ class MyProxyDownloader extends ProxyDownloader {
     }
 }
 
+class GeonodeDownloader extends ProxyDownloader {
+    constructor() {
+        super();
+        this.name = 'Geonode';
+    }
+
+    async download() {
+
+        const geonodeProxyContent = await this._getURL('https://proxylist.geonode.com/api/proxy-list?limit=150&page=1&sort_by=speed&sort_type=asc');
+        const proxies = [];
+        try {
+            const proxiesInfo = JSON.parse(geonodeProxyContent);
+            proxiesInfo.data.forEach(proxyInfo => {
+                proxyInfo.protocols.forEach(protocol => {
+                    if (protocol.indexOf('socks') > -1) {
+                        proxies.push(new SocksProxy(proxyInfo.ip, proxyInfo.port))
+                    } else if (protocol.indexOf('http') > -1) {
+                        proxies.push(new HttpProxy(proxyInfo.ip, proxyInfo.port))
+                    }
+                })
+            })
+        } catch (_) {
+            console.log(`An error occured while downloading proxies from ${this.name}`);
+        } finally {
+            return proxies;
+        }
+    }
+}
+
+class SpysMeDownloader extends ProxyDownloader {
+    constructor() {
+        super();
+        this.name = 'Spys me';
+    }
+
+    async download() {
+        const spysmeProxyContent = await this._getURL('https://spys.me/proxy.txt');
+        const proxies = [];
+        let parseContent = false;
+        try {
+            spysmeProxyContent.split('\n')
+                .forEach((line) => {
+                    if (parseContent && line.indexOf(':') > -1) {
+                        const [host, port] = line.split(' ')[0].split(':');
+                        if (net.isIP(host)) {
+                            proxies.push(new SocksProxy(host, port));
+                        }
+                    }
+
+                    if (line.length < 1) {
+                        parseContent = true;
+                    }
+                })
+        } catch (_) {
+            console.log(`An error occured while downloading proxies from ${this.name}`);
+        } finally {
+            return proxies;
+        }
+    }
+}
+
 async function downloadAllProxies() {
     const proxyScrapeDownloader = new ProxyScrapeDownloader();
     const foxtoolsDownloader = new FoxtoolsDownloader();
     const freeProxyListDownloader = new FreeProxyListDownloader();
     const myProxyDownloader = new MyProxyDownloader();
+    const geonodeDownloader = new GeonodeDownloader();
+    const spysMeDownloader = new SpysMeDownloader();
 
     const proxyPromises = await Promise.allSettled([
         proxyScrapeDownloader.download(),
         foxtoolsDownloader.download(),
         freeProxyListDownloader.download(),
-        myProxyDownloader.download()
+        myProxyDownloader.download(),
+        geonodeDownloader.download(),
+        spysMeDownloader.download(),
     ]);
 
-    const proxies = new Set();
+    const proxies = [];
+    const proxiesSeenKeys = new Set();
     proxyPromises.forEach(res => {
-        res.value.forEach(v => proxies.add(v));
+        res.value.forEach(v => {
+            const proxyKey = v.toString();
+            if (!proxiesSeenKeys.has(proxyKey)) {
+                proxies.push(v);
+                proxiesSeenKeys.add(proxyKey);
+            }
+        });
     });
-    return Array.from(proxies);
+    return proxies;
 }
 
 module.exports.ProxyScrapeDownloader = ProxyScrapeDownloader;
 module.exports.FoxtoolsDownloader = FoxtoolsDownloader;
 module.exports.FreeProxyListDownloader = FreeProxyListDownloader;
 module.exports.MyProxyDownloader = MyProxyDownloader;
+module.exports.GeonodeDownloader = GeonodeDownloader;
+module.exports.SpysMeDownloader = SpysMeDownloader;
 module.exports.downloadAllProxies = downloadAllProxies;

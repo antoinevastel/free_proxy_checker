@@ -88,3 +88,8 @@ For the moment the library is really basic, it only checks if a proxy is UP/DOWN
 It doesn't store any data about latency.
 Feel free to open an issue if you have a feature request. 
 I may add it to the library if I feel like it's relevant.
+
+## Related projects
+
+[https://niek.github.io/free-proxy-list/](https://niek.github.io/free-proxy-list/): A page that leverages the free-proxy-checker library to display a list of available proxies. 
+Results are updated every hour.
