@@ -43,6 +43,7 @@ const {ProxyChecker, ProxyScrapeDownloader, FoxtoolsDownloader, FreeProxyListDow
     const allProxies = await downloadAllProxies();
 
     // Then, we can check the availability of the proxies we downloaded
+    // The verbose: true option enables you to see the testing progress and have a time estimate
     const proxyChecker = new ProxyChecker(allProxies, {
         concurrency: 25,
         timeout: 7500,
