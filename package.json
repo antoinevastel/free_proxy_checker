@@ -1,6 +1,6 @@
 {
   "name": "free-proxy-checker",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Library without any external dependencies to check if free HTTP/SOCKS4/SOCKS5 proxies are working/up.",
   "main": "src/index.js",
   "scripts": {},
