@@ -37,10 +37,8 @@ class ProxyChecker {
                     await proxy._testConnection(this.options.timeout);
                 } catch (_) { }
                 finally {
-                    if (this.options.verbose) {
                         if (this.options.verbose) {
                             this.progressBar.tick();
-                        }
                     }
                 }
             })
